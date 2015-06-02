@@ -1,0 +1,11 @@
+./local-helper.sh distopt.mllib_driver \
+--trainFile=data/regr_train.dat \
+--numFeatures=20 \
+--numRounds=100 \
+--localIterFrac=1.0 \
+--numSplits=4 \
+--lambda=0.00005 \
+--justCoCoA=false \
+--debugIter=1 \
+--seed=2 \
+--beta=1.0
