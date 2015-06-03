@@ -9,6 +9,7 @@ import org.apache.spark.mllib.util.MLUtils
 import org.apache.spark.mllib.regression.LassoWithSGD
 import org.apache.spark.mllib.util.MLUtils
 import org.apache.spark.ml.regression._
+import org.apache.spark.ml.classification._
 import org.apache.spark.sql.{SQLContext, DataFrame}
 //import org.apache.spark.sql.SQLContext.implicits._
 
@@ -41,6 +42,7 @@ object ml_driver {
     val beta = options.getOrElse("beta","1.0").toDouble;  // scaling parameter when combining the updates of the workers (1=averaging)
     val debugIter = options.getOrElse("debugIter","10").toInt // set to -1 to turn off debugging output
     val seed = options.getOrElse("seed","0").toInt // set seed for debug purposes
+    val linReg = options.getOrElse("linReg","true").toBoolean
 
     // print out inputs
     println("master:       " + master);          println("trainFile:    " + trainFile);
@@ -49,7 +51,8 @@ object ml_driver {
     println("testfile:     " + testFile);        println("justCoCoA     " + justCoCoA);       
     println("lambda:       " + lambda);          println("numRounds:    " + numRounds);       
     println("localIterFrac:" + localIterFrac);   println("beta          " + beta);     
-    println("debugIter     " + debugIter);       println("seed          " + seed);   
+    println("debugIter     " + debugIter);       println("seed          " + seed);
+    println("linReg:       " + linReg)  
 
     // start spark context
     val conf = new SparkConf().setMaster(master)
@@ -71,13 +74,22 @@ object ml_driver {
     val n = data.count()
     println("\nRunning MLlib MB-SGD on "+n+" data examples, distributed over "+parts+" workers")
 
-    // need newest version of spark to do this
-    val lr = new LinearRegression()
-    lr.setMaxIter(numRounds).setRegParam(lambda).setElasticNetParam(1.0).setTol(1e-10)
-    // Print out the parameters, documentation, and any default values.
-    println("Linear Regression parameters:\n" + lr.explainParams() + "\n")
-    val model = lr.fit(data.toDF())
-    println("Model was fit using parameters: " + model.parent.extractParamMap())
+    if(linReg){
+        // need newest version of spark to do this
+        val lr = new LinearRegression()
+        lr.setMaxIter(numRounds).setRegParam(lambda).setElasticNetParam(1.0).setTol(1e-10)
+        // Print out the parameters, documentation, and any default values.
+        println("Linear Regression parameters:\n" + lr.explainParams() + "\n")
+        val model = lr.fit(data.toDF())
+        println("Model was fit using parameters: " + model.parent.extractParamMap())
+    } else{
+        val lr = new LogisticRegression()
+        lr.setMaxIter(numRounds).setRegParam(lambda).setElasticNetParam(1.0).setTol(1e-10)
+        // Print out the parameters, documentation, and any default values.
+        println("Logistic Regression parameters:\n" + lr.explainParams() + "\n")
+        val model = lr.fit(data.toDF())
+        println("Model was fit using parameters: " + model.parent.extractParamMap())
+    }
 
 
     sc.stop()
