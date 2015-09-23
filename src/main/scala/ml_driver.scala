@@ -72,7 +72,7 @@ object ml_driver {
     val data = MLUtils.loadLibSVMFile(sc, trainFile, -1, numSplits).cache()
     val parts = data.partitions.size    // number of partitions of the data, K in the paper
     val n = data.count()
-    println("\nRunning MLlib MB-SGD on "+n+" data examples, distributed over "+parts+" workers")
+    println("\nRunning MLlib OWL-QN on "+n+" data examples, distributed over "+parts+" workers")
 
     if(linReg){
         // need newest version of spark to do this
